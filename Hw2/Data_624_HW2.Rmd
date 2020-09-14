@@ -1,0 +1,159 @@
+---
+title: "Data 624 HW2"
+author: "V Patel"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    df_print: paged
+    highlight: tango
+    theme: united
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+if (!require("fpp2")) install.packages("fpp2")
+```
+
+### 3.1 
+
+For the following series, find an appropriate Box-Cox transformation in order to stabilise the variance.
+
+* `usnetelec`
+* `usgdp`
+* `mcopper`
+* `enplanements`
+
+#### `usnetelec`
+
+```{r}
+autoplot(usnetelec)
+box_lamda_ulec<- BoxCox.lambda(usnetelec)
+autoplot(BoxCox(usnetelec, box_lamda_ulec))
+```
+
+`r box_lamda_ulec` is suggested lambda. 
+
+
+#### `usgdp`
+
+```{r}
+autoplot(usgdp)
+box_lamda_udp<- BoxCox.lambda(usgdp)
+autoplot(BoxCox(usgdp, box_lamda_udp))
+```
+
+`r box_lamda_udp` is suggested lambda. 
+
+#### `mcopper`
+
+```{r}
+autoplot(mcopper)
+box_lamda_mcopper<- BoxCox.lambda(mcopper)
+autoplot(BoxCox(mcopper, box_lamda_mcopper))
+```
+
+`r box_lamda_mcopper` is suggested lambda. 
+
+#### `enplanements`
+
+```{r}
+autoplot(enplanements)
+box_lamda_enpl<- BoxCox.lambda(enplanements)
+autoplot(BoxCox(enplanements, box_lamda_enpl))
+```
+
+`r box_lamda_enpl` is suggested lambda.
+
+### 3.2
+
+Why is a Box-Cox transformation unhelpful for the cangas data?
+
+```{r}
+autoplot(cangas)
+autoplot(BoxCox(cangas, BoxCox.lambda(cangas)))
+```
+
+I don't see an improvement on Box-Cox transformation. Hence,  Box-Cox transformation is not helpful.
+
+### 3.3
+
+What Box-Cox transformation would you select for your retail data (from Exercise 3 in Section 2.10)?
+
+```{r}
+library(readxl)
+retaildata <- readxl::read_excel("C:/Users/patel/Documents/Data_624/retail.xlsx", skip=1)
+
+myts <- ts(retaildata[,"A3349398A"], frequency=12, start=c(1982,4))
+autoplot(myts)
+```
+
+```{r}
+(lambda_retail <- BoxCox.lambda(myts))
+autoplot(BoxCox(myts,lambda_retail))
+```
+
+`r lambda_retail` is suggested lambda value.
+
+ 
+### 3.8
+
+For your retail time series (from Exercise 3 in Section 2.10):
+
+A. Split the data into two parts using
+
+```{r}
+myts.train <- window(myts, end=c(2010,12))
+myts.test <- window(myts, start=2011)
+```
+
+
+B. Check that your data have been split appropriately by producing the following plot.
+
+```{r}
+autoplot(myts) +
+  autolayer(myts.train, series="Training") +
+  autolayer(myts.test, series="Test")
+
+```
+
+
+
+C. Calculate forecasts using snaive applied to myts.train.
+
+```{r}
+fc <- snaive(myts.train)
+```
+
+
+
+D. Compare the accuracy of your forecasts against the actual values stored in myts.test.
+
+```{r}
+accuracy(fc,myts.test)
+```
+
+
+
+E. Check the residuals.
+
+```{r}
+checkresiduals(fc)
+```
+
+
+Do the residuals appear to be uncorrelated and normally distributed?
+
+**Nope, it does not correlated with each other and not normally distributed**
+
+F. How sensitive are the accuracy measures to the training/test split?
+
+It seems Mean Error is highly sensitive, RMSE, MAE, MPE, MASE are sensitive, and MAPE and ACF1 are not sensitive 
