@@ -1,0 +1,115 @@
+---
+title: "Data 624 HW3"
+author: "V Patel"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    df_print: paged
+    highlight: tango
+    theme: united
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+if (!require("fpp2")) install.packages("fpp2")
+if (!require("seasonal")) install.packages("seasonal")
+
+```
+
+### 6.2 The `plastics` data set consists of the monthly sales (in thousands) of product A for a plastics manufacturer for five years.
+
+
+#### A. Plot the time series of sales of product A. Can you identify seasonal fluctuations and/or a trend-cycle?
+
+```{r fig.height=4, fig.width=6}
+autoplot(plastics) + ylab("Monthly Sales")
+```
+
+**There is a increasing trend in the timeseries. All sales are at peak in summer**
+
+#### B. Use a classical multiplicative decomposition to calculate the trend-cycle and seasonal indices.
+
+```{r fig.height=4, fig.width=6}
+fit <- decompose(plastics, type="multiplicative")
+
+trend_indices <- fit$trend
+seasonal_indices <- fit$seasonal
+
+autoplot(trend_indices)
+```
+
+**The results in of the multiplicative decomposition show that there is an increasing trend till 5 years. After that we can see decreasing it is decresing.**
+
+```{r fig.height=4, fig.width=6}
+autoplot(seasonal_indices)
+```
+
+**seasonal_indices is identical in thoughout all years**
+
+
+#### C. Do the results support the graphical interpretation from part a?
+
+**Yes, Results does support the graphical interpretation. summer months does have sales higher than other seasonal**
+
+#### D. Compute and plot the seasonally adjusted data.
+
+```{r}
+adjusted <- seasadj(fit)
+plot(adjusted)
+```
+
+#### E. Change one observation to be an outlier (e.g., add 500 to one observation), and recompute the seasonally adjusted data. What is the effect of the outlier?
+
+```{r}
+obs_plast <- plastics
+obs_plast[17] = obs_plast[17] + 500
+
+fit2 <- decompose(obs_plast, type="multiplicative")
+
+change_obes <- seasadj(fit2)
+plot(change_obes)
+```
+
+**There is sudden spike in plot**
+
+#### F. Does it make any difference if the outlier is near the end rather than in the middle of the time series?
+
+```{r}
+obs_plast1 <- plastics
+obs_plast1[55] = obs_plast[55] + 500
+
+fit3 <- decompose(obs_plast1, type="multiplicative")
+
+change_obes_end <- seasadj(fit3)
+plot(change_obes_end)
+```
+
+**It appears that it doesn't matter where the outlier occurs. we see a identical spike at the end like seen in previous plot**
+
+
+### 6.3 Recall your retail time series data (from Exercise 3 in Section 2.10). Decompose the series using X11. Does it reveal any outliers, or unusual features that you had not noticed previously?
+
+
+```{r message=FALSE, warning=FALSE}
+library(readxl)
+library(seasonal)
+
+retaildata <- readxl::read_excel("C:/Users/patel/Documents/Data_624/retail.xlsx", skip=1)
+
+myts <- ts(retaildata[,"A3349398A"], frequency=12, start=c(1982,4))
+myts %>% seas(x11="") -> myts_x11
+autoplot(myts_x11) +
+  ggtitle("X11 decomposition")
+```
+
+**The X11 decomposition method reveals a smooth upward trend. The remainder plot describes that after 1992 trend and seasonality appear consistent. The unusual features that I had not noticed previously was there is sudden spike at 1986 in remainder plot despite there is consistancy in tread before and after that. ** 
+
+
