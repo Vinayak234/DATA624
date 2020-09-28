@@ -23,19 +23,23 @@ if (!require("Hmisc")) install.packages("Hmisc")
 if (!require("PerformanceAnalytics")) install.packages("PerformanceAnalytics")
 if (!require("mlbench")) install.packages("mlbench")
 if (!require("car")) install.packages("car")
-library(caret)
+if (!require("missForest")) install.packages("missForest")
+if (!require("Amelia")) install.packages("Amelia")
+if (!require("kableExtra")) install.packages("kableExtra")
+if (!require("naniar")) install.packages("naniar")
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("caret")) install.packages("caret")
 ```
 
 ### 3.1 
 
-The UC Irvine Machine Learning Repository6 contains a data set related
-to glass identification. The data consist of 214 glass samples labeled as one of seven class categories. There are nine predictors, including the refractive index and percentages of eight elements: Na, Mg, Al, Si, K, Ca, Ba, and Fe. 
+The UC Irvine Machine Learning Repository6 contains a data set related to glass identification. The data consist of 214 glass samples labeled as one of seven class categories. There are nine predictors, including the refractive index and percentages of eight elements: Na, Mg, Al, Si, K, Ca, Ba, and Fe. 
 
 The data can be accessed via
 
 #### (a) Using visualizations, explore the predictor variables to understand their distributions as well as the relationships between predictors.
 
-```{r fig.height=6, fig.width=6}
+```{r fig.height=7, fig.width=7, fig.align='center'}
 data(Glass)
 str(Glass)
 glass <- subset(Glass, select = -Type)
@@ -47,7 +51,7 @@ From the Correlation, we can see that the variable Ri and Ca are strong positive
 
 #### (b) Do there appear to be any outliers in the data? Are any predictors skewed?
 
-```{r}
+```{r fig.align='center'}
 hist.data.frame(glass)
 par(mfrow=c(3,3))
 for(var in names(glass)){
@@ -59,7 +63,7 @@ for(var in names(glass)){
 
 #### (c) Are there any relevant transformations of one or more predictors that might improve the classification model?
 
-```{r}
+```{r fig.align='center'}
 #library(caret)
 Trans <- preProcess(glass, method = "YeoJohnson")
 TransData <- predict(Trans, newdata= glass)
@@ -74,4 +78,76 @@ for(var in names(TransData)){
 
 This transformation did change relative to the original distributions is that a second mode was induced for predictors `Ba` and `Fe`. Given these results, this transformation did not seem to improve the data (in terms of skewness). Thus, it was unable to resolve skewness in this data via transformations but it minimized the number of unusual observations.
 
+### 3.2
 
+The soybean data can also be found at the UC Irvine Machine Learning Repository. Data were collected to predict disease in 683 soybeans. The 35 predictors are mostly categorical and include information on the environmental conditions (e.g., temperature, precipitation) and plant conditions (e.g., left spots, mold growth). The outcome labels consist of 19 distinct classes.
+
+```{r}
+data(Soybean)
+summary(Soybean)
+```
+
+When we look closely at this output, we see that the factor levels of some predictors are not informative. For example, the `temp` column contains integer values.  These values correspond the relative temperature: below average, average and above average. 
+
+#### (a) Investigate the frequency distributions for the categorical predictors. Are any of the distributions degenerate in the ways discussed earlier in this chapter?
+
+
+```{r}
+Soybean2 <-Soybean[,2:36]
+par(mfrow=c(3,6))
+for (i in 1:ncol(Soybean2)) {
+  smoothScatter(Soybean2[ ,i], ylab = names(Soybean2[i]))
+}
+
+nearZeroVar(Soybean2, names = TRUE, saveMetrics=T)
+```
+
+There are a few degenerate and that is due to the low frequencies. Most important once are mycelium and sclerotia. The Smoothed Density Scatterplot for the variables shows one color across the chart. The variables leaf.mild and int.discolor appear to show near-zero variance.
+
+
+
+#### (b) Roughly 18 % of the data are missing. Are there particular predictors that are more likely to be missing? Is the pattern of missing data related to the classes? 
+
+```{r fig.align='center'}
+Soybean %>%
+  arrange(Class) %>%
+  missmap(main = "Missing vs Observed")
+```
+
+As heatmap suggest, data are missing but it doesn't give us clear piture base on class of data missing so i will use `naniar' package
+
+```{r fig.height=12, fig.width=10, fig.align='center'}
+gg_miss_var(Soybean, facet = Class)
+
+table(Soybean$Class, complete.cases(Soybean))
+```
+
+As we can see in class `phytophthora-rot` , there more missing values than other class. 
+
+
+#### (c) Develop a strategy for handling missing data, either by eliminating predictors or imputation.
+
+```{r}
+#Remove near zero variance predictors
+Soybean <- Soybean %>%
+  select (-leaf.mild, -mycelium, -sclerotia)
+
+
+#seed 10% missing values
+Soybean.mis <- prodNA(Soybean, noNA = 0.1)
+ summary(Soybean.mis)
+
+#impute missing values, using all parameters as default values
+Soybean.imp <- missForest(Soybean.mis)
+
+#check imputed values
+Soybean2 <- as.data.frame(Soybean.imp$ximp)
+
+
+Soybean2 %>%
+  arrange(Class) %>%
+  missmap(main = "Missing vs Observed")
+
+```
+
+All missing values are impute by missforest package
