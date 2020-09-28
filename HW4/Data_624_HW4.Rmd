@@ -1,0 +1,77 @@
+---
+title: "Data 624 HW4"
+author: "V Patel"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    df_print: paged
+    highlight: tango
+    theme: united
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+if (!require("Hmisc")) install.packages("Hmisc")
+if (!require("PerformanceAnalytics")) install.packages("PerformanceAnalytics")
+if (!require("mlbench")) install.packages("mlbench")
+if (!require("car")) install.packages("car")
+library(caret)
+```
+
+### 3.1 
+
+The UC Irvine Machine Learning Repository6 contains a data set related
+to glass identification. The data consist of 214 glass samples labeled as one of seven class categories. There are nine predictors, including the refractive index and percentages of eight elements: Na, Mg, Al, Si, K, Ca, Ba, and Fe. 
+
+The data can be accessed via
+
+#### (a) Using visualizations, explore the predictor variables to understand their distributions as well as the relationships between predictors.
+
+```{r fig.height=6, fig.width=6}
+data(Glass)
+str(Glass)
+glass <- subset(Glass, select = -Type)
+chart.Correlation(glass)
+
+```
+
+From the Correlation, we can see that the variable Ri and Ca are strong positive correlated(0.81). `Ri` ad `Si` are negative correlated (-0.54)
+
+#### (b) Do there appear to be any outliers in the data? Are any predictors skewed?
+
+```{r}
+hist.data.frame(glass)
+par(mfrow=c(3,3))
+for(var in names(glass)){
+  boxplot(glass[var], main=paste('Boxplot of', var), horizontal = T)
+}
+```
+
+**From Figure, we can see that `K` and `Mg` appear to have possible second modes around zero and that several predictors `Ca`, `Ba`, `Fe` and `RI` show signs of skewness. There may be one or two outliers in `K`, but they could simply be due to natueral skewness. Also, predictors `Ca`, `RI`, `Na` and `Si` have concentrations of samples in the middle of the scale and a small number of data points at the edges of the distribution. Yes, boxplot proves that there is outliers in the data.**
+
+#### (c) Are there any relevant transformations of one or more predictors that might improve the classification model?
+
+```{r}
+#library(caret)
+Trans <- preProcess(glass, method = "YeoJohnson")
+TransData <- predict(Trans, newdata= glass)
+
+hist.data.frame(TransData)
+
+par(mfrow=c(3,3))
+for(var in names(TransData)){
+  boxplot(TransData[var], main=paste('Boxplot of', var), horizontal = T)
+}
+```
+
+This transformation did change relative to the original distributions is that a second mode was induced for predictors `Ba` and `Fe`. Given these results, this transformation did not seem to improve the data (in terms of skewness). Thus, it was unable to resolve skewness in this data via transformations but it minimized the number of unusual observations.
+
+
