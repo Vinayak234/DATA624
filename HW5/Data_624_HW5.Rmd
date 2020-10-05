@@ -300,8 +300,27 @@ checkresiduals(fc_myts_d)
 
 #### E. Now find the test set RMSE, while training the model to the end of 2010. Can you beat the seasonal naïve approach from Exercise 8 in Section 3.7?
 
+```{r}
+myts_train <- window(myts, end = c(2010, 12))
+myts_test <- window(myts, start = 2011)
 
-### 7.9 For the same retail data, try an STL decomposition applied to the Box-Cox transformed series, followed by ETS on the seasonally adjusted data. How does that compare with your best previous forecasts on the test set?
+myts_train_d <- hw(myts_train, damped = TRUE, seasonal = "multiplicative")
+
+print(paste0("1. RMSE - Holt damped  : " ))
+accuracy(myts_train_d, myts_test)[,2]
+
+myts_train_sn <- snaive(myts_train, h=100)
+print(paste0("2. RMSE - naïve approach  : " ))
+accuracy(myts_train_sn,myts_test)[,2]
+
+
+```
+
+RMSE in Holt damped method is lower compare to snaive method. Hence, the Holt-Winter’s Multiplicative Damped method outperformed seasonal naive forecast.
+
+
+
+
 
 
 

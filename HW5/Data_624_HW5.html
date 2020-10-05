@@ -11,7 +11,7 @@
 
 <meta name="author" content="V Patel" />
 
-<meta name="date" content="2020-10-04" />
+<meta name="date" content="2020-10-05" />
 
 <title>Data 624 HW3</title>
 
@@ -2845,7 +2845,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Data 624 HW3</h1>
 <h4 class="author">V Patel</h4>
-<h4 class="date">2020-10-04</h4>
+<h4 class="date">2020-10-05</h4>
 
 </div>
 
@@ -3136,10 +3136,24 @@ div.tocify {
 </div>
 <div id="e.-now-find-the-test-set-rmse-while-training-the-model-to-the-end-of-2010.-can-you-beat-the-seasonal-naïve-approach-from-exercise-8-in-section-3.7" class="section level4">
 <h4>E. Now find the test set RMSE, while training the model to the end of 2010. Can you beat the seasonal naïve approach from Exercise 8 in Section 3.7?</h4>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb75-1" title="1">myts_train &lt;-<span class="st"> </span><span class="kw">window</span>(myts, <span class="dt">end =</span> <span class="kw">c</span>(<span class="dv">2010</span>, <span class="dv">12</span>))</a>
+<a class="sourceLine" id="cb75-2" title="2">myts_test &lt;-<span class="st"> </span><span class="kw">window</span>(myts, <span class="dt">start =</span> <span class="dv">2011</span>)</a>
+<a class="sourceLine" id="cb75-3" title="3"></a>
+<a class="sourceLine" id="cb75-4" title="4">myts_train_d &lt;-<span class="st"> </span><span class="kw">hw</span>(myts_train, <span class="dt">damped =</span> <span class="ot">TRUE</span>, <span class="dt">seasonal =</span> <span class="st">&quot;multiplicative&quot;</span>)</a>
+<a class="sourceLine" id="cb75-5" title="5"></a>
+<a class="sourceLine" id="cb75-6" title="6"><span class="kw">print</span>(<span class="kw">paste0</span>(<span class="st">&quot;1. RMSE - Holt damped  : &quot;</span> ))</a></code></pre></div>
+<pre><code>## [1] &quot;1. RMSE - Holt damped  : &quot;</code></pre>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb77-1" title="1"><span class="kw">accuracy</span>(myts_train_d, myts_test)[,<span class="dv">2</span>]</a></code></pre></div>
+<pre><code>## Training set     Test set 
+##     25.68057     41.08034</code></pre>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb79-1" title="1">myts_train_sn &lt;-<span class="st"> </span><span class="kw">snaive</span>(myts_train, <span class="dt">h=</span><span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb79-2" title="2"><span class="kw">print</span>(<span class="kw">paste0</span>(<span class="st">&quot;2. RMSE - naïve approach  : &quot;</span> ))</a></code></pre></div>
+<pre><code>## [1] &quot;2. RMSE - naïve approach  : &quot;</code></pre>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb81-1" title="1"><span class="kw">accuracy</span>(myts_train_sn,myts_test)[,<span class="dv">2</span>]</a></code></pre></div>
+<pre><code>## Training set     Test set 
+##     72.20702    145.46662</code></pre>
+<p>RMSE in Holt damped method is lower compare to snaive method. Hence, the Holt-Winter’s Multiplicative Damped method outperformed seasonal naive forecast.</p>
 </div>
-</div>
-<div id="for-the-same-retail-data-try-an-stl-decomposition-applied-to-the-box-cox-transformed-series-followed-by-ets-on-the-seasonally-adjusted-data.-how-does-that-compare-with-your-best-previous-forecasts-on-the-test-set" class="section level3">
-<h3>7.9 For the same retail data, try an STL decomposition applied to the Box-Cox transformed series, followed by ETS on the seasonally adjusted data. How does that compare with your best previous forecasts on the test set?</h3>
 </div>
 
 
