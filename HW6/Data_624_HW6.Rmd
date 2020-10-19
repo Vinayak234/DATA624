@@ -113,13 +113,13 @@ kpss.test(diff(diff(usnetelec)))
 
 #### c. `mcopper`
 
-```{r}
+```{r fig.width=8, fig.align='center'}
 plot(mcopper)
 ```
 
 **mcopper data have increasing trend. And they have bigger variation for bigger prices. Therefore I'll use Box-Cox transformation before differencing **
 
-```{r}
+```{r fig.width=8, fig.align='center'}
 lambda_mcopper <- BoxCox.lambda(mcopper)
 plot(diff(BoxCox(mcopper, lambda_mcopper)))
 Box.test(diff(BoxCox(mcopper, lambda_mcopper)),
@@ -136,7 +136,7 @@ kpss.test(diff(BoxCox(mcopper, lambda_mcopper)))
 
 #### d. `enplanements`
 
-```{r}
+```{r fig.width=8, fig.align='center'}
 plot(enplanements)
 ```
 
@@ -149,7 +149,7 @@ ndiffs(enplanements)
 ```
 
 
-```{r}
+```{r fig.width=8, fig.align='center'}
 diff_enplane <- diff(BoxCox(enplanements, lambda_enplanements))
 plot(diff_enplane)
 ```
@@ -168,7 +168,7 @@ kpss.test(diff_enplane)
 
 #### e. `visitors`
 
-```{r}
+```{r fig.width=8, fig.align='center'}
 plot(visitors)
 ```
 
@@ -179,7 +179,7 @@ lambda_visitors <- BoxCox.lambda(visitors)
 ndiffs(visitors)
 ```
 
-```{r}
+```{r fig.width=8, fig.align='center'}
 diff_visit<- diff(BoxCox(visitors, lambda_visitors))
 
 plot(diff_visit)
@@ -194,41 +194,120 @@ kpss.test(diff_visit)
 ```
 **But kpss test result shows that differencings with Box-Cox transformation was enough to make the data stationary. In visitors data case, even if differencings with Box-Cox transformation didn't make the data like white noise series, it made the data stationary.**
 
-### 8.5
+### 8.5 For your retail data (from Exercise 3 in Section 2.10), find the appropriate order of differencing (after transformation if necessary) to obtain stationary data.
+
+```{r fig.width=8, fig.align='center'}
+library(readxl)
+library(seasonal)
+
+retaildata <- readxl::read_excel("C:/Users/patel/Documents/Data_624/retail.xlsx", skip=1)
+
+myts <- ts(retaildata[,"A3349335T"],
+  frequency=12, start=c(1982,4))
+plot(myts)
+```
 
 ```{r}
+kpss.test(diff(BoxCox(myts, BoxCox.lambda(myts))))
+```
+
+**To make retail.ts data stationary, I did Box-Cox transformation, 1 first differencing **
+
+### 8.6 Use R to simulate and plot some data from simple ARIMA models.
+
+#### a. Use the following R code to generate data from an AR(1) model with $\phi_{1} = 0.6$ and  $\sigma^2=1$. The process starts with $y_1=0$
+
+```{r}
+ar.1 <- function(phi, sd=1, n=100){
+  y <- ts(numeric(n))
+  e <- rnorm(n, sd=sd)
+  for(i in 2:n)
+    y[i] <- phi*y[i-1] + e[i]
+  return(y)
+}
 
 ```
 
-** **
-```{r}
+#### b. Produce a time plot for the series. How does the plot change as you change $\phi_{1}$ ?
 
+```{r fig.width=8, fig.align='center'}
+autoplot(ar.1(0.006), series = "0.006") + 
+  geom_line(colour = "red") +   
+  autolayer(ar.1(0.06), series = "0.06") +   
+  autolayer(ar.1(0.6), series = "0.6") +
+  ylab("Data") +  
+  guides(colour = guide_legend(title = "Phi"))
+```
+
+```{r fig.height=3, fig.width=6, fig.align= 'center'}
+par(mfrow=c(1,3))
+acf(ar.1(0.006),main='Phi=0.006')
+acf(ar.1(0.06),main='Phi=0.06')
+acf(ar.1(0.6),main='Phi=0.6')
+```
+
+#### c. Write your own code to generate data from an MA(1) model with $\theta_{1} = 0.6$ and $\sigma^2=1$
+
+```{r}
+set.seed(17)
+ma.1 <- function(theta, sd=1, n=100){
+  y <- ts(numeric(n))
+  e <- rnorm(n, sd=sd)
+  e[1] <- 0
+  for(i in 2:n)
+    y[i] <- theta*e[i-1] + e[i]
+  return(y)
+}
 ```
 
 ** **
 
-### 8.6
+#### d. Produce a time plot for the series. How does the plot change as you change $\theta_{1}$ ?
 
-```{r}
-
+```{r fig.width=8, fig.align='center'}
+autoplot(ma.1(0.006), series = "0.006") + 
+  geom_line(colour = "red") +   
+  autolayer(ma.1(0.06), series = "0.06") +   
+  autolayer(ma.1(0.6), series = "0.6") +
+  ylab("Data") +  
+  guides(colour = guide_legend(title = "Theta"))
 ```
 
-** **
-```{r}
-
+```{r fig.height=3, fig.width=6, fig.align= 'center'}
+par(mfrow=c(1,3))
+acf(ma.1(0.006),main='Theta=0.006')
+acf(ma.1(0.06),main='Theta=0.06')
+acf(ma.1(0.6),main='Theta=0.6')
 ```
 
-** **
 
-### 8.7
+#### e. Generate data from an ARMA(1,1) model with  $\phi_{1} = 0.6$ , $\theta_{1} = 0.6$ and $\sigma^2=1$
 
 ```{r}
-
+y1 <- ts(numeric(100))
+e <- rnorm(100, sd=1)
+for(i in 2:100)
+  y1[i] <- 0.6*y1[i-1] + 0.6*e[i-1] + e[i] 
+plot(y1)
 ```
 
-** **
+#### f. Generate data from an AR(2) model with $\phi_{1} =-0.8, \phi_{2} = 0.3$ and $\sigma^2=1$
+
 ```{r}
-
+y2 <- ts(numeric(100))
+e <- rnorm(100, sd=1)
+for(i in 3:100)
+  y2[i] <- -0.8*y2[i-1] + 0.3*y2[i-2] + e[i]
+plot(y2)
 ```
 
-** **
+#### g. Graph the latter two series and compare them.
+
+
+```{r fig.height=3, fig.width=4, fig.align= 'center'}
+par(mfrow=c(1,2))
+acf(y1, main='AR(1,1)')
+acf(y2, main='AR(2)')
+```
+
+**data from an AR(2) model increased with oscillation. They are non-staionary data. But data from an ARMA(1, 1) model were stationary.**
