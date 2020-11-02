@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/684740/5d843cc2afe245688ca7fa7158fc9bb6
+bundleId: https://api.rpubs.com/api/v1/document/684740/5d843cc2afe245688ca7fa7158fc9bb6
+url: http://rpubs.com/patel_vinayak234/684740
+when: 1604298991.38179

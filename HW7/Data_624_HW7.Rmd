@@ -20,6 +20,8 @@ knitr::opts_chunk$set(echo = TRUE)
 if (!require("fpp2")) install.packages("fpp2")
 if (!require("caret")) install.packages("caret")
 if (!require("AppliedPredictiveModeling")) install.packages("AppliedPredictiveModeling")
+if (!require("naniar")) install.packages("naniar")
+if (!require("missForest")) install.packages("missForest")
 ```
 
 
@@ -87,7 +89,7 @@ pls.pred <- predict(plsTune, newdata = testFingerprints)
 postResample(pred = pls.pred, obs = testPermeability)
 ```
 
-The $R^2$ of the test set prediction is `0.4324274` 
+The RMSE is `15.7580242` and $R^2$ of the test set prediction is `0.4324274` 
 
 
 #### e) Try building other models discussed in this chapter. Do any have better predictive performance?
@@ -101,5 +103,111 @@ ridgeTune <- train(trainFingerprints, trainPermeability, method = "ridge",
 ridgeTune
 ```
 
+```{r}
+ridge.pred <- predict(ridgeTune, newdata = testFingerprints)
+postResample(pred = ridge.pred, obs = testPermeability)
+```
+
+The RMSE is `13.5313372` and $R^2$ of the test set prediction is `0.3687824` 
+
+```{r}
+plot(ridgeTune)
+```
+
+
+#### (f) Would you recommend any of your models to replace the permeability laboratory experiment?
+
+The PLS model worked better on this data due to the lower accuracy scores revealed
+
+
+### 6.3 A chemical manufacturing process for a pharmaceutical product was discussed in Sect.1.4. In this problem, the objective is to understand the relationship between biological measurements of the raw materials (predictors), measurements of the manufacturing process (predictors), and the response of product yield. Biological predictors cannot be changed but can be used to assess the quality of the raw material before processing. On the other hand, manufacturing process predictors can be changed in the manufacturing process. Improving product yield by 1% will boost revenue by approximately one hundred thousand dollars per batch:
+
+
+#### (a) Start R and use these commands to load the data:
+
+```{r}
+data("ChemicalManufacturingProcess")
+dim(ChemicalManufacturingProcess)
+```
+
+```{r fig.height=7, fig.width=5}
+gg_miss_var(ChemicalManufacturingProcess) + labs(y = "Look at all the missing ones")
+```
+
+```{r fig.height=7, fig.width=5}
+cmp_impute<- missForest(ChemicalManufacturingProcess)
+cmp_impute <- as.data.frame(cmp_impute$ximp)
+
+gg_miss_var(cmp_impute, show_pct = TRUE) + labs(y = "Look at all the missing ones")
+
+```
+
+#### c) Split the data into a training and a test set, pre-process the data, and use a model of your choice from this chapter. What is the optimal value of the performance metric?
+
+```{r}
+library(pls)
+
+set.seed(17)
+
+smp1 <- floor(0.75 * nrow(cmp_impute))
+
+trainingRows <- sample(seq_len(nrow(cmp_impute)), size = smp1)
+y1 <- sample(seq_len(nrow(cmp_impute)), size = smp1)
+
+cmpTrain <- cmp_impute[trainingRows,-1]
+cmpTest <- cmp_impute[-trainingRows,-1]
+yTrain <- cmp_impute[y1,1]
+yTest <- cmp_impute[-y1,1]
+
+cmpTune <- train(cmpTrain, yTrain,
+                 method = "pls",
+                 tuneLength = 20, trControl = ctrl,
+                 preProc = c("center", "scale"))
+
+cmpTune
+```
+
+
+#### d) Predict the response for the test set. What is the value of the performance metric and how does this compare with the resampled performance metric on the training set?
+
+
+```{r}
+cmpPred <- predict(cmpTune, newdata = cmpTest)
+postResample(pred = cmpPred, obs = yTest)
+```
+The $R^2$ is a really low `0.0001139327`
+
+```{r warning=FALSE}
+ridgeGrid <- data.frame(.lambda = seq(0, .1, length = 15)) 
+set.seed(17) 
+
+ridgeTune2 <- train(cmpTrain, yTrain, method = "ridge", 
+                      tuneGrid = ridgeGrid, 
+                      trControl = ctrl)
+ridgeTune2
+```
+
+```{r}
+plot(ridgeTune2)
+```
+
+```{r}
+ridge.pred <- predict(ridgeTune2, newdata = cmpTest)
+postResample(pred = ridge.pred, obs = yTest)
+```
+
+
+#### e) Which predictors are most important in the model you have trained? Do either the biological or process predictors dominate the list?
+
+```{r}
+varImp(ridgeTune2)
+
+```
+
+`ManufacturingProcess` seems to have the most importance than `BiologicalMaterial`
+
+#### f) Explore the relationships between each of the top predictors and the response. How could this information be helpful in improving yield in future runs of the manufacturing process?
+
+**the most important manufacturing process steps allows the company to pinpoint where they can start fine tuning the procedure.**
 
 
